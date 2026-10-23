@@ -1,0 +1,17 @@
+// Route Maven Central through Google's mirror; repo.maven.apache.org rate-limits this host (HTTP 429).
+def MIRROR = 'https://maven-central.storage-download.googleapis.com/maven2/'
+def redirect = { repos ->
+	repos.withType(MavenArtifactRepository).configureEach { r ->
+		if (r.url.toString().contains('repo.maven.apache.org') || r.url.toString().contains('repo1.maven.org')) {
+			r.url = MIRROR
+		}
+	}
+}
+beforeSettings { settings ->
+	redirect(settings.pluginManagement.repositories)
+	redirect(settings.buildscript.repositories)
+}
+allprojects {
+	redirect(buildscript.repositories)
+	redirect(repositories)
+}
